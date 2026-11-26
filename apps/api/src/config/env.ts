@@ -5,7 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
   API_PREFIX: z.string().default("/api/v1"),
-  MONGODB_URI: z.string().min(1),
+  MONGODB_URI: z.string().min(1).default("mongodb://127.0.0.1:27017/agrinexus"),
   WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
