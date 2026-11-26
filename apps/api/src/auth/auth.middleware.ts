@@ -11,9 +11,10 @@ export const requireAuth: RequestHandler = (req, _res, next) => {
 export const requireOrganization: RequestHandler = (req, _res, next) => {
   if (!req.auth) return next(new HttpError(401, "UNAUTHENTICATED", "Authentication is required."));
   const organizationId = req.header("x-organization-id");
-  if (!organizationId || !/^[a-f\\d]{24}$/i.test(organizationId)) return next(new HttpError(400, "ORGANIZATION_CONTEXT_REQUIRED", "Provide a valid X-Organization-Id header."));
+  if (!organizationId || !/^[a-f\d]{24}$/i.test(organizationId)) return next(new HttpError(400, "ORGANIZATION_CONTEXT_REQUIRED", "Provide a valid X-Organization-Id header."));
   void Membership.findOne({ organizationId, userId: req.auth.userId, status: "active" }).lean().then((membership) => {
     if (!membership) return next(new HttpError(403, "ORGANIZATION_ACCESS_DENIED", "You are not an active member of this organization."));
-    req.organization = { id: organizationId, role: membership.role as NonNullable<Express.Request["organization"]>["role"] }; next();
+    req.organization = { id: organizationId, role: membership.role as NonNullable<Express.Request["organization"]>["role"] };
+    next();
   }).catch(next);
 };
