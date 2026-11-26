@@ -28,6 +28,12 @@ async function issueSession(userId: string, req: Request, res: Response) {
   return { accessToken: await createAccessToken(userId), tokenType: "Bearer", expiresIn: env.ACCESS_TOKEN_TTL };
 }
 function slugify(value: string) { return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "organization"; }
+async function listActiveOrganizations(userId: string) {
+  const memberships = await Membership.find({ userId, status: "active" }).exec();
+  const organizations = await Organization.find({ _id: { $in: memberships.map((m) => m.organizationId) }, status: "active" }).select("name slug").exec();
+  const roles = new Map(memberships.map((m) => [m.organizationId.toString(), m.role] as const));
+  return organizations.map((org) => ({ id: org._id.toString(), name: org.name, slug: org.slug, role: roles.get(org._id.toString()) }));
+}
 authRouter.post("/register", asyncRoute(async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) throw new HttpError(400, "VALIDATION_ERROR", "Provide a valid name, email, password (10–128 characters), and organization name.");
@@ -42,24 +48,20 @@ authRouter.post("/register", asyncRoute(async (req, res) => {
 authRouter.post("/login", asyncRoute(async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);
   if (!parsed.success) throw new HttpError(400, "VALIDATION_ERROR", "A valid email and password are required.");
-  const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select("+passwordHash");
+  const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select("+passwordHash").exec();
   if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) throw new HttpError(401, "INVALID_CREDENTIALS", "Email or password is incorrect.");
   if (user.status !== "active") throw new HttpError(403, "ACCOUNT_SUSPENDED", "This account is currently suspended.");
-  const memberships = await Membership.find({ userId: user._id, status: "active" }).populate({ path: "organizationId", match: { status: "active" }, select: "name slug status" }).lean();
   const session = await issueSession(user.id, req, res);
-  const organizations = memberships.filter((m) => m.organizationId).map((m) => {
-    const org = m.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string };
-    return { id: org._id.toString(), name: org.name, slug: org.slug, role: m.role };
-  });
+  const organizations = await listActiveOrganizations(user.id);
   res.json({ success: true, data: { ...session, user: { id: user.id, fullName: user.fullName, email: user.email }, organizations } });
 }));
 authRouter.post("/refresh", asyncRoute(async (req, res) => {
   const raw = readRefreshCookie(req.headers.cookie);
   if (!raw) throw new HttpError(401, "REFRESH_TOKEN_REQUIRED", "A refresh session is required.");
-  const current = await RefreshSession.findOne({ tokenHash: hashRefreshToken(raw) });
+  const current = await RefreshSession.findOne({ tokenHash: hashRefreshToken(raw) }).exec();
   if (!current || current.expiresAt <= new Date() || current.revokedAt) throw new HttpError(401, "INVALID_REFRESH_TOKEN", "The refresh session is invalid or expired.");
   const nextToken = createRefreshToken(), nextHash = hashRefreshToken(nextToken), now = new Date();
-  const claimed = await RefreshSession.findOneAndUpdate({ _id: current._id, revokedAt: null, expiresAt: { $gt: now } }, { $set: { revokedAt: now, replacedByTokenHash: nextHash } }, { new: true });
+  const claimed = await RefreshSession.findOneAndUpdate({ _id: current._id, revokedAt: null, expiresAt: { $gt: now } }, { $set: { revokedAt: now, replacedByTokenHash: nextHash } }, { new: true }).exec();
   if (!claimed) throw new HttpError(401, "REFRESH_TOKEN_REUSED", "The refresh session has already been rotated.");
   const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86400000);
   await RefreshSession.create({ tokenHash: nextHash, familyId: current.familyId, userId: current.userId, expiresAt,
@@ -69,16 +71,12 @@ authRouter.post("/refresh", asyncRoute(async (req, res) => {
 }));
 authRouter.post("/logout", asyncRoute(async (req, res) => {
   const raw = readRefreshCookie(req.headers.cookie);
-  if (raw) await RefreshSession.updateOne({ tokenHash: hashRefreshToken(raw), revokedAt: null }, { $set: { revokedAt: new Date() } });
+  if (raw) await RefreshSession.updateOne({ tokenHash: hashRefreshToken(raw), revokedAt: null }, { $set: { revokedAt: new Date() } }).exec();
   res.clearCookie(cookieName, cookieOptions); res.status(204).send();
 }));
 authRouter.get("/me", requireAuth, asyncRoute(async (req, res) => {
-  const user = await User.findById(req.auth!.userId).select("fullName email status createdAt").lean();
+  const user = await User.findById(req.auth!.userId).select("fullName email status createdAt").exec();
   if (!user || user.status !== "active") throw new HttpError(401, "ACCOUNT_UNAVAILABLE", "This account is unavailable.");
-  const memberships = await Membership.find({ userId: user._id, status: "active" }).populate({ path: "organizationId", match: { status: "active" }, select: "name slug" }).lean();
-  const organizations = memberships.filter((m) => m.organizationId).map((m) => {
-    const org = m.organizationId as unknown as { _id: { toString(): string }; name: string; slug: string };
-    return { id: org._id.toString(), name: org.name, slug: org.slug, role: m.role };
-  });
-  res.json({ success: true, data: { user: { id: user._id.toString(), fullName: user.fullName, email: user.email }, organizations } });
+  const organizations = await listActiveOrganizations(user.id);
+  res.json({ success: true, data: { user: { id: user.id, fullName: user.fullName, email: user.email }, organizations } });
 }));
