@@ -8,4 +8,4 @@ const membershipSchema = new Schema({
   invitedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 }, { timestamps: true, versionKey: false });
 membershipSchema.index({ organizationId: 1, userId: 1 }, { unique: true });
-export const Membership = mongoose.models.Membership || mongoose.model("Membership", membershipSchema);
+export const Membership: mongoose.Model<any> = mongoose.models.Membership ?? mongoose.model("Membership", membershipSchema);
