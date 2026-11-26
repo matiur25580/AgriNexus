@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 const organizationSchema = new Schema({
   name: { type: String, required: true, trim: true, maxlength: 120 },
-  slug: { type: String, required: true, unique: true, lowercase: true, index: true },
+  slug: { type: String, required: true, unique: true, lowercase: true },
   status: { type: String, enum: ["active", "suspended"], default: "active", index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true, versionKey: false });
