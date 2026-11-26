@@ -5,4 +5,4 @@ const organizationSchema = new Schema({
   status: { type: String, enum: ["active", "suspended"], default: "active", index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true, versionKey: false });
-export const Organization = mongoose.models.Organization || mongoose.model("Organization", organizationSchema);
+export const Organization: mongoose.Model<any> = mongoose.models.Organization ?? mongoose.model("Organization", organizationSchema);
