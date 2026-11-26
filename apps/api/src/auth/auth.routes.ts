@@ -59,10 +59,17 @@ authRouter.post("/refresh", asyncRoute(async (req, res) => {
   const raw = readRefreshCookie(req.headers.cookie);
   if (!raw) throw new HttpError(401, "REFRESH_TOKEN_REQUIRED", "A refresh session is required.");
   const current = await RefreshSession.findOne({ tokenHash: hashRefreshToken(raw) }).exec();
-  if (!current || current.expiresAt <= new Date() || current.revokedAt) throw new HttpError(401, "INVALID_REFRESH_TOKEN", "The refresh session is invalid or expired.");
+  if (!current || current.expiresAt <= new Date()) throw new HttpError(401, "INVALID_REFRESH_TOKEN", "The refresh session is invalid or expired.");
+  if (current.revokedAt) {
+    await RefreshSession.updateMany({ familyId: current.familyId, revokedAt: null }, { $set: { revokedAt: new Date() } }).exec();
+    throw new HttpError(401, "REFRESH_TOKEN_REUSED", "Refresh-token reuse was detected; this session family has been revoked.");
+  }
   const nextToken = createRefreshToken(), nextHash = hashRefreshToken(nextToken), now = new Date();
   const claimed = await RefreshSession.findOneAndUpdate({ _id: current._id, revokedAt: null, expiresAt: { $gt: now } }, { $set: { revokedAt: now, replacedByTokenHash: nextHash } }, { new: true }).exec();
-  if (!claimed) throw new HttpError(401, "REFRESH_TOKEN_REUSED", "The refresh session has already been rotated.");
+  if (!claimed) {
+    await RefreshSession.updateMany({ familyId: current.familyId, revokedAt: null }, { $set: { revokedAt: now } }).exec();
+    throw new HttpError(401, "REFRESH_TOKEN_REUSED", "Refresh-token reuse was detected; this session family has been revoked.");
+  }
   const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86400000);
   await RefreshSession.create({ tokenHash: nextHash, familyId: current.familyId, userId: current.userId, expiresAt,
     userAgent: req.get("user-agent")?.slice(0, 500) ?? null, ipAddress: req.ip ?? null });
