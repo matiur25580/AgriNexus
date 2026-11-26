@@ -21,10 +21,16 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: "draf
 app.get(`${env.API_PREFIX}/health`, (_req, res) => res.status(200).json({ success: true, data: { status: "ok", service: "agrinexus-api", timestamp: new Date().toISOString() } }));
 app.use(`${env.API_PREFIX}/auth`, rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false }), authRouter);
 app.use(`${env.API_PREFIX}/organizations`, organizationRouter);
-app.use((_req, res) => res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "The requested resource was not found." } }));
+app.use((_req, res) => { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "The requested resource was not found." } }); });
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  if (error instanceof HttpError) return res.status(error.statusCode).json({ success: false, error: { code: error.code, message: error.message } });
-  if (error && typeof error === "object" && "code" in error && error.code === 11000) return res.status(409).json({ success: false, error: { code: "RESOURCE_CONFLICT", message: "A resource with these details already exists." } });
+  if (error instanceof HttpError) {
+    res.status(error.statusCode).json({ success: false, error: { code: error.code, message: error.message } });
+    return;
+  }
+  if (error && typeof error === "object" && "code" in error && error.code === 11000) {
+    res.status(409).json({ success: false, error: { code: "RESOURCE_CONFLICT", message: "A resource with these details already exists." } });
+    return;
+  }
   logger.error({ err: error }, "Unhandled request error");
-  return res.status(500).json({ success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." } });
+  res.status(500).json({ success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." } });
 });
