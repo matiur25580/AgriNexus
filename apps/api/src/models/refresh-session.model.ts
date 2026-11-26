@@ -10,4 +10,4 @@ const refreshSessionSchema = new Schema({
   ipAddress: { type: String, maxlength: 100, default: null },
 }, { timestamps: true, versionKey: false });
 refreshSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-export const RefreshSession = mongoose.models.RefreshSession || mongoose.model("RefreshSession", refreshSessionSchema);
+export const RefreshSession: mongoose.Model<any> = mongoose.models.RefreshSession ?? mongoose.model("RefreshSession", refreshSessionSchema);
