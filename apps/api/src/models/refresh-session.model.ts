@@ -1,9 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 const refreshSessionSchema = new Schema({
-  tokenHash: { type: String, required: true, unique: true, index: true },
+  tokenHash: { type: String, required: true, unique: true },
   familyId: { type: String, required: true, index: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  expiresAt: { type: Date, required: true, index: true },
+  expiresAt: { type: Date, required: true },
   revokedAt: { type: Date, default: null },
   replacedByTokenHash: { type: String, default: null },
   userAgent: { type: String, maxlength: 500, default: null },
