@@ -6,4 +6,4 @@ const userSchema = new Schema({
   status: { type: String, enum: ["active", "suspended"], default: "active", index: true },
   emailVerifiedAt: { type: Date, default: null },
 }, { timestamps: true, versionKey: false });
-export const User = mongoose.models.User || mongoose.model("User", userSchema);
+export const User: mongoose.Model<any> = mongoose.models.User ?? mongoose.model("User", userSchema);
