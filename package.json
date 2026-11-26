@@ -1,0 +1,25 @@
+{
+  "name": "agrinexus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise agricultural intelligence and farm-to-market traceability platform",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22.0.0", "npm": ">=10.0.0" },
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @agrinexus/api\" \"npm run dev -w @agrinexus/web\"",
+    "dev:api": "npm run dev -w @agrinexus/api",
+    "dev:web": "npm run dev -w @agrinexus/web",
+    "build": "npm run build -w @agrinexus/api && npm run build -w @agrinexus/web",
+    "typecheck": "npm run typecheck -w @agrinexus/api && npm run typecheck -w @agrinexus/web",
+    "lint": "npm run lint -w @agrinexus/api && npm run lint -w @agrinexus/web",
+    "test": "npm run test -w @agrinexus/api && npm run test -w @agrinexus/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "npm run clean -w @agrinexus/api && npm run clean -w @agrinexus/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  }
+}
