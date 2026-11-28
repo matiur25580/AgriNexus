@@ -10,6 +10,7 @@ import { authRouter } from "./auth/auth.routes.js";
 import { organizationRouter } from "./organizations/organization.routes.js";
 import { farmRouter } from "./farms/farm.routes.js";
 import { plotRouter } from "./farms/plot.routes.js";
+import { cropSeasonRouter } from "./crops/crop-season.routes.js";
 import { HttpError } from "./lib/http-error.js";
 export const app = express();
 app.disable("x-powered-by");
@@ -25,6 +26,7 @@ app.use(`${env.API_PREFIX}/auth`, rateLimit({ windowMs: 15 * 60 * 1000, limit: 2
 app.use(`${env.API_PREFIX}/organizations`, organizationRouter);
 app.use(`${env.API_PREFIX}/farms`, farmRouter);
 app.use(`${env.API_PREFIX}/plots`, plotRouter);
+app.use(`${env.API_PREFIX}/crop-seasons`, cropSeasonRouter);
 app.use((_req, res) => { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "The requested resource was not found." } }); });
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (error instanceof HttpError) {

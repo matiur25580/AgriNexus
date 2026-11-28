@@ -36,6 +36,11 @@ describe("API foundation", () => {
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe("UNAUTHENTICATED");
   });
+  it("protects crop season routes behind authentication", async () => {
+    const response = await request(app).get("/api/v1/crop-seasons");
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHENTICATED");
+  });
   it("protects the plot registry behind authentication", async () => {
     const response = await request(app).get("/api/v1/plots/507f1f77bcf86cd799439011");
     expect(response.status).toBe(401);
