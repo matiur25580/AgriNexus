@@ -9,6 +9,7 @@ AgriNexus is an enterprise-oriented, multi-tenant platform connecting farm opera
 ## Product domains
 
 - Organization and membership management
+- Tenant-scoped farm and plot registry with role-based access controls
 - Farm, plot, and crop lifecycle management
 - Field assignments and inspection records
 - Environmental observations and weather integrations
@@ -53,7 +54,7 @@ The API health endpoint is available at `http://localhost:4000/api/v1/health`; t
 
 ## Project status
 
-Milestone 1 establishes the monorepo foundation, local development workflow, API health endpoint, and initial React application shell. Domain capabilities are delivered in subsequent milestones.
+Milestone 1 establishes the monorepo foundation and initial React application shell. Identity and organization tenancy, followed by the farm and plot registry with server-enforced role permissions, are delivered as incremental milestones.
 
 ## License
 
