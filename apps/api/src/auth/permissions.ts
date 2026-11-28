@@ -1,12 +1,12 @@
 import type { RequestHandler } from "express";
 import { HttpError } from "../lib/http-error.js";
-export type Permission = "farms:read" | "farms:write" | "plots:read" | "plots:write";
+export type Permission = "farms:read" | "farms:write" | "plots:read" | "plots:write" | "field:read" | "field:write";
 const rolePermissions: Record<NonNullable<Express.Request["organization"]>["role"], readonly Permission[]> = {
-  owner: ["farms:read", "farms:write", "plots:read", "plots:write"],
-  admin: ["farms:read", "farms:write", "plots:read", "plots:write"],
-  manager: ["farms:read", "farms:write", "plots:read", "plots:write"],
-  field_agent: ["farms:read", "plots:read", "plots:write"],
-  viewer: ["farms:read", "plots:read"],
+  owner: ["farms:read", "farms:write", "plots:read", "plots:write", "field:read", "field:write"],
+  admin: ["farms:read", "farms:write", "plots:read", "plots:write", "field:read", "field:write"],
+  manager: ["farms:read", "farms:write", "plots:read", "plots:write", "field:read", "field:write"],
+  field_agent: ["farms:read", "plots:read", "plots:write", "field:read", "field:write"],
+  viewer: ["farms:read", "plots:read", "field:read"],
 };
 export function requirePermission(permission: Permission): RequestHandler {
   return (req, _res, next) => {
