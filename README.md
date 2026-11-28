@@ -54,8 +54,13 @@ The API health endpoint is available at `http://localhost:4000/api/v1/health`; t
 
 ## Project status
 
-Milestone 1 establishes the monorepo foundation and initial React application shell. Identity and organization tenancy, farm and plot registry with server-enforced role permissions, and crop season/lifecycle APIs are delivered as incremental milestones.
+Milestone 1 establishes the monorepo foundation and initial React application shell. Identity and organization tenancy, farm and plot registry with server-enforced role permissions, crop season/lifecycle APIs, and field operations/observation APIs are delivered as incremental milestones. The `feat/field-operations-and-observations` branch adds tenant-scoped task scheduling, assignment, checklists, state transitions, actor-attributed events and field observation records. The frontend remains an illustrative dashboard and is not yet connected to these operational APIs.
 
 ## License
 
 This project is currently source-available for portfolio and demonstration purposes. Add a formal license before accepting external contributions or redistributing it.
+
+
+### Field Operations & Observations
+
+The API supports farm/plot/crop-season scoped field tasks (irrigation, soil sampling, crop scouting, fertilization, weeding, harvest preparation and equipment checks), validated assignment and status transitions, required checklists, and actor-attributed event history. It also provides an append-oriented observation log with optional measurements and coordinate pairs. These are operational records, not agronomic recommendations. See [field operations documentation](docs/field-operations-and-observations.md).
